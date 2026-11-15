@@ -1,0 +1,9 @@
+# Build and temporary files
+*.o
+*~
+*.swp
+.DS_Store
+
+# Archives & bundles
+*.bundle
+/ricoh-sp211su-driver_1.0.0_amd64.deb

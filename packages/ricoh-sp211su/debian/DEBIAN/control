@@ -1,0 +1,15 @@
+Package: ricoh-sp211su-driver
+Version: 1.0.0
+Section: misc
+Priority: optional
+Architecture: amd64
+Depends: cups, libsane1, libusb-1.0-0, libcups2t64 | libcups2
+Maintainer: Sento <sento@local>
+Description: Complete Linux driver for Ricoh Aficio SP 211SU (Printer & Scanner)
+ Provides full printing and scanning support for Ricoh Aficio SP 211SU (USB 05ca:044f).
+ Includes:
+  - Primax 64-bit DDST CUPS raster filter (rastertolilo)
+  - Official Ricoh SP-211 PPD model definition
+  - Native SANE backend (libsane-ricoh2) with USB FIFO buffer and RGB support
+  - udev permissions rules for scanner access
+  - Automated CUPS queue setup helper utility (ricoh-sp211su-setup)
