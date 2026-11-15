@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+# Ensure permissions
+chmod 0755 /usr/lib/cups/filter/rastertolilo 2>/dev/null || true
+chmod 0755 /usr/bin/ricoh-sp211su-setup 2>/dev/null || true
+
+# Symlinks for libsane-ricoh_sp211su
+SANE_DIR="/usr/lib/x86_64-linux-gnu/sane"
+if [ -d "$SANE_DIR" ]; then
+    ln -sf libsane-ricoh_sp211su.so.1.0.0 "$SANE_DIR/libsane-ricoh_sp211su.so.1"
+    ln -sf libsane-ricoh_sp211su.so.1.0.0 "$SANE_DIR/libsane-ricoh_sp211su.so"
+fi
+
+# Group setup
+getent group scanner >/dev/null || groupadd -r scanner
+getent group lp >/dev/null || groupadd -r lp
+
+# Reload dynamic libraries & udev rules
+ldconfig || true
+udevadm control --reload-rules || true
+udevadm trigger || true
+
+# Restart CUPS if running
+if systemctl is-active --quiet cups; then
+    systemctl restart cups || true
+fi
+
+# Run setup utility to configure queue if printer is plugged in
+/usr/bin/ricoh-sp211su-setup || true
+
+exit 0

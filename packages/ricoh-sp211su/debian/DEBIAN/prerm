@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+# Remove CUPS queue if it exists
+if command -v lpadmin >/dev/null 2>&1; then
+    lpadmin -x "Ricoh_SP211SU_Local" 2>/dev/null || true
+fi
+
+exit 0

@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+# Reload dynamic libraries & udev rules
+ldconfig || true
+udevadm control --reload-rules || true
+udevadm trigger || true
+
+if systemctl is-active --quiet cups; then
+    systemctl restart cups || true
+fi
+
+exit 0

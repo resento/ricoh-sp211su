@@ -1,0 +1,67 @@
+#!/bin/bash
+set -e
+
+echo "=== Ricoh Aficio SP 211SU Setup Utility ==="
+
+# 1. Check root permissions
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This utility must be run as root (sudo ricoh-sp211su-setup)."
+    exit 1
+fi
+
+# 2. Check USB device connection
+echo "Checking USB connection for Ricoh SP 211SU (05ca:044f)..."
+if lsusb -d 05ca:044f >/dev/null 2>&1; then
+    echo "  -> Device detected on USB bus."
+else
+    echo "  -> Warning: Ricoh SP 211SU not currently detected on USB."
+    echo "     Make sure the device is plugged in and powered on."
+fi
+
+# 3. Configure udev and libraries
+echo "Reloading udev and dynamic linker cache..."
+udevadm control --reload-rules || true
+udevadm trigger || true
+ldconfig || true
+
+# 4. Configure CUPS printer queue
+echo "Configuring CUPS printer queue..."
+if command -v lpadmin >/dev/null 2>&1; then
+    # Look for matching URI
+    URI=$(lpinfo -v 2>/dev/null | grep -i "05ca" | head -n1 | awk '{print $2}')
+    if [ -z "$URI" ]; then
+        URI=$(lpinfo -v 2>/dev/null | grep -i "SP%20211SU" | head -n1 | awk '{print $2}')
+    fi
+    if [ -z "$URI" ]; then
+        URI="usb://Ricoh/SP%20211SU"
+    fi
+
+    echo "  -> Using URI: $URI"
+    PPD="/usr/share/cups/model/ricoh/RICOH-SP-211.ppd"
+    QUEUE_NAME="Ricoh_SP211SU_Local"
+
+    if [ -f "$PPD" ]; then
+        lpadmin -p "$QUEUE_NAME" -E -v "$URI" -P "$PPD" -D "Ricoh Aficio SP 211SU" -L "Local USB"
+        lpadmin -d "$QUEUE_NAME" || true
+        echo "  -> Printer queue '$QUEUE_NAME' configured successfully as default."
+    else
+        echo "  -> Error: PPD file not found at $PPD"
+    fi
+else
+    echo "  -> Warning: lpadmin command not found. Install cups package."
+fi
+
+# 5. Check scanner
+echo "Checking SANE scanner backend..."
+if command -v scanimage >/dev/null 2>&1; then
+    SCANNER=$(scanimage -L 2>/dev/null | grep -i "sp211su" || true)
+    if [ -n "$SCANNER" ]; then
+        echo "  -> Scanner detected: $SCANNER"
+    else
+        echo "  -> Scanner not detected yet. Ensure user is in 'scanner' group."
+    fi
+else
+    echo "  -> Note: scanimage not found. Install sane-utils if needed."
+fi
+
+echo "=== Setup complete! ==="
